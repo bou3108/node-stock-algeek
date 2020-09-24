@@ -1,0 +1,86 @@
+pipeline {
+    agent any
+    tools {
+        maven 'Maven3'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/bou3108/node-stock-algeek.git'
+            }
+        }
+        stage('Install') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo "-=- Test Projet Unitaire -=-"
+				echo " NO SUCH TESTS YET"
+            }
+        }
+        stage('Code coverage') {
+            steps {
+                echo "-=- Test Code coverage -=-"
+				echo " NO SUCH COVERAGE YET"
+            }
+        }
+            
+        stage('Package') {
+            steps {
+                echo "-=- Package projet -=-"
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'code/node-stock-algeek/*', fingerprint: true
+                }
+            }
+        } 
+        stage('SSH transfert') {
+            steps {
+                script {
+                    sshPublisher(publishers: [
+                        sshPublisherDesc(configName:'ec2-host', transfers:[
+                            sshTransfer(
+                                execCommand:'''
+                                    echo " -=- Clean Up -=-";
+                                    sudo docker stop simple-boot-cont || true;
+                                    sudo docker rm simple-boot-cont || true;
+                                    sudo docker rmi simple-boot || true;
+                                '''
+                            ),
+                            sshTransfer(
+                                sourceFiles: "target/*.jar",
+                                removePrefix: "target",
+                                remoteDirectory: "//home//ec2-user",
+                                execCommand:'''
+                                    ls /home/ec2-user
+                                '''
+                            ),
+                            sshTransfer(
+                                sourceFiles: "Dockerfile",
+                                removePrefix: "",
+                                remoteDirectory: "//home//ec2-user",
+                                execCommand:'''
+                                    cd /home/ec2-user;
+                                    sudo docker build -t simple-boot .;
+                                    sudo docker run -d --name simple-boot-cont -p 8080:8080 simple-boot;
+                                '''
+                            ),
+                        ])    
+                    ])
+                }
+            }
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+    }
+}

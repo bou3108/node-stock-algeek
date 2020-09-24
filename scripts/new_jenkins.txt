@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "======= REPOSITORY CHECKOUT ======="
+                git 'https://github.com/bou3108/node-stock-algeek.git'
+            }
+        }
+        stage('Install') {
+            steps {
+                echo "======= NPM INSTALL ======="
+                sh 'npm install'
+            }
+        }
+        stage('Tests') {
+            steps {
+                echo "======= UNIT TESTS ======="
+                echo "no such tests yet"
+            }
+        }
+        stage('Code Coverage') {
+            steps {
+                echo "======= CODE COVERAGE ======="
+                echo "no such coverage yet"
+            }
+        }
+        stage('Package') {
+            steps {
+                echo "======= Package project ======="
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'code/node-stock-algeek/*', fingerprints: true
+                }
+            }
+        }
+        stage('SSH transfert') {
+            steps {
+                echo "======= SSH TRANSFERT ======="
+                echo "rien pour le moment"
+            }
+        }
+    }
+}
