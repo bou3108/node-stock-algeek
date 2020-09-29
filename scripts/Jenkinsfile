@@ -1,86 +1,49 @@
 pipeline {
-    agent any
+    agent any 
     tools {
-        maven 'Maven3'
+        maven 'M3'
     }
-    
     stages {
-        stage('Checkout') {
+        stage('checkout') {
             steps {
                 git 'https://github.com/bou3108/node-stock-algeek.git'
             }
         }
-        stage('Install') {
-            steps {
-                sh 'npm install'
-            }
-        }
-        stage('Test') {
-            steps {
-                echo "-=- Test Projet Unitaire -=-"
-				echo " NO SUCH TESTS YET"
-            }
-        }
-        stage('Code coverage') {
-            steps {
-                echo "-=- Test Code coverage -=-"
-				echo " NO SUCH COVERAGE YET"
-            }
-        }
-            
-        stage('Package') {
-            steps {
-                echo "-=- Package projet -=-"
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'code/node-stock-algeek/*', fingerprint: true
-                }
-            }
-        } 
-        stage('SSH transfert') {
-            steps {
+        stage ('Publish package through SSH') {
+            steps{
                 script {
-                    sshPublisher(publishers: [
-                        sshPublisherDesc(configName:'ec2-host', transfers:[
-                            sshTransfer(
-                                execCommand:'''
-                                    echo " -=- Clean Up -=-";
-                                    sudo docker stop simple-boot-cont || true;
-                                    sudo docker rm simple-boot-cont || true;
-                                    sudo docker rmi simple-boot || true;
-                                '''
+    				sshPublisher(publishers: [
+    					sshPublisherDesc(configName: 'ec2-host', transfers: [
+    						sshTransfer(
+    							execCommand: '''
+    								echo "Docker Clean Up";
+                                    sudo docker stop node-stock-cont || true;
+                                    sudo docker rm node-stock-cont || true;
+                                    sudo docker rmi node-stock || true;
+    								sudo rm -rf *;
+                                    '''
                             ),
-                            sshTransfer(
-                                sourceFiles: "target/*.jar",
-                                removePrefix: "target",
-                                remoteDirectory: "//home//ec2-user",
-                                execCommand:'''
-                                    ls /home/ec2-user
-                                '''
-                            ),
-                            sshTransfer(
-                                sourceFiles: "Dockerfile",
-                                removePrefix: "",
-                                remoteDirectory: "//home//ec2-user",
-                                execCommand:'''
-                                    cd /home/ec2-user;
-                                    sudo docker build -t simple-boot .;
-                                    sudo docker run -d --name simple-boot-cont -p 8080:8080 simple-boot;
-                                '''
-                            ),
-                        ])    
+    						sshTransfer(
+    							sourceFiles: "**/*",
+    							removePrefix: "",
+    							remoteDirectory: "//home//ec2-user",
+    							execCommand: '''
+    								ls -l /home/ec2-user;
+    							'''
+    						),
+    						sshTransfer(
+    							sourceFiles: "Dockerfile",
+    							remoteDirectory: "//home//ec2-user",
+    								execCommand: '''
+                                        cd /home/ec2-user;
+                                        sudo docker build -t node-stock .;
+                                        sudo docker run -d --name node-stock-cont -p 5000:5000 node-stock;
+                                    '''
+                            )
+                        ])
                     ])
                 }
             }
         }
-        
-        
-        
-        
-        
-        
-        
-        
     }
 }
