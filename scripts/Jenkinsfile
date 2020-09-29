@@ -13,7 +13,7 @@ pipeline {
             steps{
                 script {
     				sshPublisher(publishers: [
-    					sshPublisherDesc(configName: 'ec2-host', transfers: [
+    					sshPublisherDesc(configName: 'aws-stock-host', transfers: [
     						sshTransfer(
     							execCommand: '''
     								echo "Docker Clean Up";
